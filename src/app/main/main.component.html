@@ -1,0 +1,415 @@
+<p-card header="Buscar paciente">
+  <form [formGroup]="_mainService.form_buscar">
+
+    <div class="formgrid grid">
+      <div class="field col-12 md:col-6 lg:col-4">
+        <label htmlFor="tipo_documento" class="font-medium">
+          Tipo documento <sup class="text-red-600 font-medium">*</sup>
+        </label>
+        <p-dropdown placeholder="Seleccione" [options]="comboTipoDocumento" styleClass="w-full p-inputtext-sm" formControlName="tipo_documento" optionLabel="descripcion" optionValue="valor"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-6 lg:col-4">
+        <label htmlFor="numero_documento"  class="font-medium">
+          Número de documento <sup class="text-red-600 font-medium">*</sup>
+        </label>
+        <input placeholder="" type="string" formControlName="numero_documento" class="max-w-full p-inputtext-sm w-full" pInputText/>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3" style="align-self: end !important;">
+        <p-button icon="pi pi-search" [label]="loadingSarchPaciente ? 'Buscando...' : 'Buscar'" class="border-round-lg" (onClick)="buscarPaciente()" [disabled]="!this._mainService.form_buscar.valid ||loadingSarchPaciente"></p-button>
+      </div>
+    </div>
+  </form>
+</p-card>
+
+<div class="flex my-3 justify-content-end" *ngIf="_mainService.pacienteSearch?.id">
+  <p-button icon="pi pi-plus" label="Agregar nota" class="border-round-lg" (onClick)="openModalNotas()"></p-button>
+</div>
+
+<p-confirmDialog [style]="{width: '30vw'}"></p-confirmDialog>
+
+<div class="card my-3" *ngIf="_mainService.swVisiblePaciente">
+  <p-steps [model]="items" [readonly]="_mainService.pacienteSearch?.id ? false : true" [activeIndex]="activeIndex" (activeIndexChange)="onActiveIndexChange($event)"></p-steps>
+</div>
+
+<form [formGroup]="_mainService.form_paciente" (ngSubmit)="onSubmit()" class="mt-3" *ngIf="_mainService.swVisiblePaciente">
+
+  <p-card header="Datos Personales" styleClass="p-3" *ngIf="activeIndex == 0">
+    <div class="formgrid grid p-3" formGroupName="personales">
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="nombres">Nombres:  <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="nombres" pInputText formControlName="nombres" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="primerApellido">Primer Apellido:  <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="primerApellido" pInputText formControlName="primerApellido" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="segundoApellido">Segundo Apellido:  <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="segundoApellido" pInputText formControlName="segundoApellido" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="tipoIdentificacion">Tipo de documento:  <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboTipoDocumento" styleClass="w-full p-inputtext-sm" formControlName="tipoIdentificacion" optionLabel="descripcion" optionValue="valor"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="identificacion">Número de documento:  <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="identificacion" pInputText formControlName="identificacion" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="fechaNacimiento">Fecha de Nacimiento:  <sup class="text-red-600 font-medium">*</sup></label>
+        <p-calendar class="w-full p-inputtext-sm" id="fechaNacimiento" formControlName="fechaNacimiento" (ngModelChange)="calcularEdad()"></p-calendar>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="edad">Edad:  <sup class="text-red-600 font-medium">*</sup> </label>
+        <p-inputNumber formControlName="edad" id="edad" [min]="0" styleClass="max-w-full p-inputtext-sm w-full"></p-inputNumber>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="sexo">Sexo: <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboSexo" styleClass="w-full p-inputtext-sm" formControlName="sexo" optionLabel="descripcion" optionValue="id" [showClear]="true"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="creenciaReligiosa">Creencia Religiosa:</label>
+        <p-dropdown placeholder="Seleccione" [options]="comboReligiones" styleClass="w-full p-inputtext-sm" formControlName="creenciaReligiosa" optionLabel="descripcion" optionValue="id" [showClear]="true"></p-dropdown>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-end">
+        <p-button type="button" label="Siguiente" (onClick)="onNext()" icon="pi pi-angle-right" iconPos="right" [disabled]="!_mainService.form_paciente.controls['personales'].valid"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Ubicación" *ngIf="activeIndex == 1">
+    <div class="formgrid grid p-3" formGroupName="location">
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="departamentoResidencia">Departamento de Residencia: <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboDepartamentos" styleClass="w-full p-inputtext-sm" formControlName="departamentoResidencia" optionLabel="descripcion" optionValue="id" (ngModelChange)="this.getParCiudadesByDepartamentoResidencia()"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="pronvinciaResidencia">Provincia de Residencia: <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboProvinciaResidencia" styleClass="w-full p-inputtext-sm" formControlName="pronvinciaResidencia" optionLabel="descripcion" optionValue="id"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="distritoResidencia">Distrito de Residencia: <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="distritoResidencia" pInputText formControlName="distritoResidencia" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="direccion">Dirección: <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="direccion" pInputText formControlName="direccion" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="referencia">Referencia:</label>
+        <input class="w-full p-inputtext-sm" id="referencia" pInputText formControlName="referencia" />
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between">
+        <p-button type="button" label="Anterior" (onClick)="onPrevious()" icon="pi pi-angle-left" iconPos="left"></p-button>
+        <p-button type="button" label="Siguiente" (onClick)="onNext()" icon="pi pi-angle-right" iconPos="right" [disabled]="!_mainService.form_paciente.controls['location'].valid"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Contacto" *ngIf="activeIndex == 2">
+    <div class="formgrid grid p-3" formGroupName="contacto">
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="celular">Celular: <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="celular" pInputText formControlName="celular" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="telefono">Teléfono:</label>
+        <input class="w-full p-inputtext-sm" id="telefono" pInputText formControlName="telefono" />
+      </div>
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="correo">Correo: <sup class="text-red-600 font-medium">*</sup></label>
+        <input class="w-full p-inputtext-sm" id="correo" pInputText formControlName="correo" />
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between">
+        <p-button type="button" label="Anterior" (onClick)="onPrevious()" icon="pi pi-angle-left" iconPos="left"></p-button>
+        <p-button type="button" label="Siguiente" (onClick)="onNext()" icon="pi pi-angle-right" iconPos="right" [disabled]="!_mainService.form_paciente.controls['contacto'].valid"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Salud" *ngIf="activeIndex == 3">
+    <div class="formgrid grid p-3 pb-0" formGroupName="salud">
+      <div class="field col-12 md:col-6 lg:col-3">
+        <label for="seguro">Seguro: <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboSeguro" styleClass="w-full p-inputtext-sm" formControlName="seguro" optionLabel="descripcion" optionValue="id" (ngModelChange)="validCheckParticular()"></p-dropdown>
+      </div>
+      <div class="field col-12 md:col-6 lg:col-3">
+        <label for="hc">HC:</label>
+        <input class="w-full p-inputtext-sm" id="hc" pInputText [disabled]="true" [value]="this._mainService.form_paciente.value.personales?.identificacion" />
+      </div>
+
+      <div class="formgrid grid pb-0 col-12" *ngIf="this._mainService.form_paciente.value.salud?.seguro! == 1">
+        <div class="field col-12 md:col-12 lg:col-12">
+          <div class="flex align-items-center gap-1">
+            <p-checkbox formControlName="swHasTitular" [binary]="true" inputId="swHasTitular" (ngModelChange)="validCheckTitular($event)"></p-checkbox>
+            <label for="swHasTitular">¿Paciente tiene un titular?</label>
+          </div>
+        </div>
+        <div class="field col-12 md:col-6 lg:col-6">
+          <label for="codigoAsegurado">Tipo de plan: <sup class="text-red-600 font-medium">*</sup></label>
+          <input class="w-full p-inputtext-sm" id="hc" pInputText formControlName="tipoPlan" />
+        </div>
+        <div class="field col-12 md:col-6 lg:col-6">
+          <label for="inicioVigencia">Inicio de vigencia: <sup class="text-red-600 font-medium">*</sup></label>
+          <p-calendar class="w-full p-inputtext-sm" id="inicioVigencia" formControlName="inicioVigencia"></p-calendar>
+        </div>
+        <div class="field col-12 md:col-6 lg:col-6">
+          <label for="codigoAsegurado">Código de asegurado: <sup class="text-red-600 font-medium">*</sup></label>
+          <input class="w-full p-inputtext-sm" id="codigoAsegurado" pInputText formControlName="codigoAsegurado" />
+        </div>
+        <div class="formgrid grid pb-0 col-12" *ngIf="!this._mainService.form_paciente.value.salud?.swHasTitular">
+          <div class="field col-12 md:col-3 lg:col-3">
+            <label for="contratante">Nombre del contratante: <sup class="text-red-600 font-medium">*</sup></label>
+            <input class="w-full p-inputtext-sm" id="contratante" pInputText formControlName="contratante" />
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3">
+            <label for="tipoAfiiacion">Tipo de Afiliación: <sup class="text-red-600 font-medium">*</sup></label>
+            <input class="w-full p-inputtext-sm" id="tipoAfiiacion" pInputText formControlName="tipoAfiiacion" />
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3">
+            <label for="titularFechaAfiliaacion">Fecha de Afiliación: <sup class="text-red-600 font-medium">*</sup></label>
+            <p-calendar class="w-full p-inputtext-sm" id="titularFechaAfiliaacion" formControlName="fechaAfiliaacion"></p-calendar>
+          </div>
+          <div class="field col-12 md:col-3 lg:col-3">
+            <label for="titularPlanesSeguro">Planes de Seguro:<sup class="text-red-600 font-medium">*</sup></label>
+            <input class="w-full p-inputtext-sm" id="titularPlanesSeguro" pInputText formControlName="planesSeguro" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between">
+        <p-button type="button" label="Anterior" (onClick)="onPrevious()" icon="pi pi-angle-left" iconPos="left"></p-button>
+        <p-button type="button" label="Siguiente" (onClick)="onNext()" icon="pi pi-angle-right" iconPos="right" [disabled]="!_mainService.form_paciente.controls['salud'].valid"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Titular" *ngIf="_mainService.form_paciente.value.salud?.swHasTitular && activeIndex == 4">
+    <form [formGroup]="_mainService.form_buscar_titular" *ngIf="_mainService.form_paciente.value.salud?.swHasTitular">
+      <div class="formgrid grid p-3">
+        <div class="field col-12 md:col-3 lg:col-3">
+          <label for="titularTipoIdentificacion">Tipo de Identificación:</label>
+          <p-dropdown placeholder="Seleccione" [options]="comboTipoDocumento" styleClass="w-full p-inputtext-sm" formControlName="tipo_documento" optionLabel="descripcion" optionValue="valor"></p-dropdown>
+        </div>
+        <div class="field col-12 md:col-3 lg:col-3">
+          <label for="titularIdentificacion">Identificación:</label>
+          <input class="w-full p-inputtext-sm" id="titularIdentificacion" pInputText formControlName="numero_documento" />
+        </div>
+        <div class="field col-12 md:col-3 lg:col-3" style="align-self: end !important;">
+          <p-button icon="pi pi-search" [label]="loadingSearchTitular ? 'Buscando' :'Buscar'" class="border-round-lg" (onClick)="buscarPacienteTitular()" [disabled]="!this._mainService.form_buscar_titular.valid ||loadingSearchTitular"></p-button>
+        </div>
+      </div>
+      <!-- {{_mainService.form_buscar_titular.value | json}} -->
+      <p-table [value]="searchedPacienteTitular" [tableStyle]="{ 'min-width': '50rem' }" styleClass="m-3" *ngIf="searchedPacienteTitular.length >=1">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>Documento</th>
+            <th>Teléfono</th>
+            <th>Código de asegurado</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-product>
+          <tr>
+            <td>{{ product.nombres}}</td>
+            <td>{{ product.primerApellido + " " + product.segundoApellido}}</td>
+            <td>{{ product.tipoIdentificacionId ?? '' + " " + product.identificacion ?? ''}}</td>
+            <td>{{ product.celular}}</td>
+            <td>{{ product.codigoAsegurado ?? '3456789'}}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </form>
+    <div class="formgrid grid p-3" formGroupName="titular" *ngIf="_mainService.form_paciente.value.salud?.swHasTitular">
+      <div class="field col-12 md:col-3 lg:col-3">
+        <label for="titularParentesco">Parentesco: <sup class="text-red-600 font-medium">*</sup></label>
+        <p-dropdown placeholder="Seleccione" [options]="comboParentesco" styleClass="w-full p-inputtext-sm" formControlName="parentesco" optionLabel="descripcion" optionValue="id"></p-dropdown>
+      </div>
+    </div>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between">
+        <p-button type="button" label="Anterior" (onClick)="onPrevious()" icon="pi pi-angle-left" iconPos="left"></p-button>
+        <p-button type="button" label="Siguiente" (onClick)="onNext()" icon="pi pi-angle-right" iconPos="right" [disabled]="!_mainService.form_paciente.controls['titular'].valid || !searchedPacienteTitular"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+
+  <p-card header="Confirmación de datos" *ngIf="!_mainService.form_paciente.value.salud?.swHasTitular && activeIndex == 4 || _mainService.form_paciente.value.salud?.swHasTitular && activeIndex == 5">
+    <ng-template pTemplate="subtitle"> Por favor verifica los datos seleccionados </ng-template>
+    <ng-template pTemplate="content">
+
+      <!-- Datos del paciente -->
+      <div class="grid">
+        <div class="col-12">
+          <div class="card-custom">
+            <div class="card-header px-4 py-3">
+              <h5 class="font-semibold text-lg mb-0">Datos del paciente</h5>
+            </div>
+            <div class="card-content">
+              <div class="p-4 flex flex-column gap-3">
+                <div class="flex gap-1 align-items-center">
+                  <p-avatar class="mr-5 mb-3 lg:mb-0 hidden sm:block" [label]="_mainService.form_paciente.value.personales?.nombres![0]" shape="circle" size="xlarge" styleClass="avatar-custom-primary"></p-avatar>
+                  <span class="text-900 font-medium text-xl">{{ _mainService.form_paciente.value.personales?.nombres }} {{ _mainService.form_paciente.value.personales?.primerApellido }} {{ _mainService.form_paciente.value.personales?.segundoApellido }}</span>
+                </div>
+                <div class="mt-3">
+                  <div class="grid align-items-center flex-wrap">
+                    <div class="col-12 md:col-3">
+                      <span class="font-semibold text-500">Documento</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.personales?.tipoIdentificacion}} {{
+                        _mainService.form_paciente.value.personales?.identificacion }}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Fecha de nacimiento</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.personales?.fechaNacimiento | date:'dd-MM-yyyy'}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Edad</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.personales?.edad}} años</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Sexo</span>
+                      <div class="text-700 mt-2">{{comboSexo | findDescription:_mainService.form_paciente.value.personales?.sexo! }}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.personales?.creenciaReligiosa">
+                      <span class="font-semibold text-500">Creencia religiosa</span>
+                      <div class="text-700 mt-2">{{ comboReligiones | findDescription:_mainService.form_paciente.value.personales?.creenciaReligiosa!}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Celular</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.contacto?.celular}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.contacto?.telefono">
+                      <span class="font-semibold text-500">Teléfono</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.contacto?.telefono}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Correo</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.contacto?.correo}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Ubicación</span>
+                      <div class="text-700 mt-2">
+                        {{comboDepartamentos | findDescription:_mainService.form_paciente.value.location?.departamentoResidencia! }},
+                        {{ comboProvinciaResidencia | findDescription:_mainService.form_paciente.value.location?.pronvinciaResidencia! }},
+                        {{_mainService.form_paciente.value.location?.distritoResidencia }},
+                        {{_mainService.form_paciente.value.location?.direccion }}
+                        Ref.{{_mainService.form_paciente.value.location?.referencia }}
+                      </div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Seguro</span>
+                      <div class="text-700 mt-2">{{comboSeguro | findDescription:_mainService.form_paciente.value.salud?.seguro!}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">HC</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.personales?.identificacion}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.tipoPlan">
+                      <span class="font-semibold text-500">Tipo de plan</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.tipoPlan}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.inicioVigencia">
+                      <span class="font-semibold text-500">Inicio de vigencia</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.inicioVigencia | date:'dd-MM-yyyy'}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.codigoAsegurado">
+                      <span class="font-semibold text-500">Código de asegurado</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.codigoAsegurado}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.contratante">
+                      <span class="font-semibold text-500">Nombre del contratante</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.contratante}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.tipoAfiiacion">
+                      <span class="font-semibold text-500">Tipo de afiliación</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.tipoAfiiacion}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.fechaAfiliaacion">
+                      <span class="font-semibold text-500">Fecha de afiliación</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.fechaAfiliaacion | date:'dd-MM-yyyy'}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="_mainService.form_paciente.value.salud?.planesSeguro">
+                      <span class="font-semibold text-500">Planes de seguro</span>
+                      <div class="text-700 mt-2">{{_mainService.form_paciente.value.salud?.planesSeguro}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos del titular -->
+      <div class="grid" *ngIf="searchedPacienteTitular.length >= 1">
+        <div class="col-12">
+          <div class="card-custom">
+            <div class="card-header px-4 py-3">
+              <h5 class="font-semibold text-lg mb-0">Datos del titular</h5>
+            </div>
+            <div class="card-content">
+              <div class="p-4 flex flex-column gap-3">
+                <div class="flex gap-1 align-items-center">
+                  <p-avatar class="mr-5 mb-3 lg:mb-0 hidden sm:block" [label]="searchedPacienteTitular[0].nombres[0]" shape="circle" size="xlarge" styleClass="avatar-custom-primary"></p-avatar>
+                  <span class="text-900 font-medium text-xl">{{searchedPacienteTitular[0].nombres }} {{ searchedPacienteTitular[0].primerApellido }} {{ searchedPacienteTitular[0].segundoApellido }}</span>
+                </div>
+                <div class="mt-3">
+                  <div class="grid align-items-center flex-wrap">
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Documento</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0].tipoIdentificacion}} {{
+                        searchedPacienteTitular[0].identificacion }}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="searchedPacienteTitular[0]?.telefono">
+                      <span class="font-semibold text-500">Teléfono</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0].telefono}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">	Código de asegurado</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0].codigoAsegurado}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3">
+                      <span class="font-semibold text-500">Parentesco</span>
+                      <div class="text-700 mt-2">{{ comboParentesco | findDescription:_mainService.form_paciente.value.titular?.parentesco!}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="searchedPacienteTitular[0]?.contratante">
+                      <span class="font-semibold text-500">Nombre del contratante</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0]?.contratante}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="searchedPacienteTitular[0]?.tipoAfiiacion">
+                      <span class="font-semibold text-500">Tipo de afiliación</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0]?.tipoAfiiacion}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="searchedPacienteTitular[0]?.fechaAfiliaacion">
+                      <span class="font-semibold text-500">Fecha de afiliación</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0]?.fechaAfiliaacion | date:'dd-MM-yyyy'}}</div>
+                    </div>
+                    <div class="col-12 md:col-3 mt-3" *ngIf="searchedPacienteTitular[0]?.planesSeguro">
+                      <span class="font-semibold text-500">Planes de seguro</span>
+                      <div class="text-700 mt-2">{{searchedPacienteTitular[0]?.planesSeguro}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <div class="flex justify-content-between">
+        <p-button label="Volver" (onClick)="onPrevious()" icon="pi pi-angle-left" iconPos="left" type="button"></p-button>
+        <p-button [icon]="_mainService.pacienteSearch ? 'pi pi-pencil' : 'pi pi-save'" [label]="_mainService.pacienteSearch ? 'Editar' : 'Crear' " class="border-round-lg" (onClick)="_mainService.pacienteSearch ? edit(): onSubmit()"></p-button>
+      </div>
+    </ng-template>
+  </p-card>
+</form>

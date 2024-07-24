@@ -1,0 +1,37 @@
+<div class="flex align-items-end justify-content-end">
+  <p-button (click)="showDialog()" icon="pi pi-external-link" label="Nueva nota"></p-button>
+</div>
+<p-timeline [value]="events" styleClass="customized-timeline timeline-without-opposite"  align="rigth">
+  <ng-template pTemplate="marker" let-event>
+      <span class="custom-marker shadow-2 p-3" [style.backgroundColor]="event.color">
+        <i class="text-white" [ngClass]="event.icon"></i>
+      </span>
+  </ng-template>
+  <ng-template pTemplate="content" let-event>
+      <p-card [header]="event.status" [subheader]="event.date">
+        <p>
+          <b>Usuario:</b> <span class="ml-2">{{ event.user}}</span>
+        </p>
+        <p>
+          <b>Observación:</b> <span class="ml-2">{{ event.observacion}}</span>
+        </p>
+      </p-card>
+  </ng-template>
+</p-timeline>
+<p-dialog header="Agegar nota" [(visible)]="modalAddIsOpen" [style]="{width: '40vw', heigth: '30vh'}" appendTo="body">
+  <form [formGroup]="_notaService.form">
+    <div class="formgrid grid">
+      <div class="field col-12">
+        <label htmlFor="tipificacion">Tipificación</label>
+        <p-dropdown placeholder="Seleccione" [options]="comboTipificaciones" styleClass="w-full p-inputtext-sm" formControlName="tipificacion" optionLabel="descripcion" optionValue="id" [filter]="true" filterBy="descripcion"></p-dropdown>
+      </div>
+      <div class="field col-12">
+        <label htmlFor="observacion">Observación</label>
+        <textarea rows="5" cols="30" pInputTextarea formControlName="observacion"  placeholder="Escriba aquí..." class="d-grid w-full"></textarea>
+      </div>
+    </div>
+    <div class="flex my-3 justify-content-end">
+      <p-button icon="pi pi-save" label="Guardar" class="border-round-lg" (onClick)="addNota()" [disabled]="!this._notaService.form.valid ||loading"></p-button>
+    </div>
+  </form>
+</p-dialog>
